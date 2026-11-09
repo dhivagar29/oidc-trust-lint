@@ -14,17 +14,18 @@ A trust policy that federates `token.actions.githubusercontent.com` without a ti
 
 | ID | Severity | What it catches |
 | --- | --- | --- |
-| `OIDC_AUD_MISSING` | critical | No `token.actions.githubusercontent.com:aud` condition |
+| `OIDC_AUD_MISSING` | critical | No positive `aud` condition |
 | `OIDC_AUD_WRONG` | critical | `aud` present but not `sts.amazonaws.com` |
-| `OIDC_SUB_MISSING` | critical | No `sub` condition (any repo that can get a token may assume) |
-| `OIDC_SUB_WILDCARD_ANY` | critical | `sub` like `repo:*` (any org/repo on GitHub) |
-| `OIDC_SUB_WILDCARD_ORG` | high | `sub` like `repo:org/*` (any repo in an org) |
+| `OIDC_SUB_MISSING` | critical | No positive `sub` condition (`StringEquals`/`StringLike`); also when only `StringNot*` exists |
+| `OIDC_SUB_FORALLVALUES` | critical | `ForAllValues:` on `sub` — true when the key is absent on single-valued claims, so it is not a real restriction |
+| `OIDC_SUB_WILDCARD_ANY` | critical | `sub` like `repo:*`, or a wildcard in the org segment before `/` (e.g. `repo:myorg*` spans `myorg-evil/...`); `?` counts like `*` |
+| `OIDC_SUB_WILDCARD_ORG` | high | `sub` like `repo:org/*` (any repo in a fixed org) |
 | `OIDC_PRINCIPAL_WRONG` | critical | Missing / wildcard / non-ARN Federated principal |
 | `OIDC_RISKY_PRINCIPALS` | high | `sts:AssumeRoleWithWebIdentity` combined with other principals (e.g. `AWS: *`) |
 | `OIDC_STRINGLIKE_UNNECESSARY` | medium | `StringLike` used when values have no `*` / `?` |
 | `OIDC_SUB_UNPINNED` | low | `sub` not pinned to a concrete branch, tag, or environment |
 
-Only statements that look like GitHub OIDC trust (Federated principal or condition keys for `token.actions.githubusercontent.com`) are evaluated. EC2/Lambda/etc. trust policies are ignored.
+Only **Allow** statements that look like GitHub OIDC trust (Federated principal or condition keys for `token.actions.githubusercontent.com`) are evaluated. **Deny statements are skipped** and never count as the Allow's `sub`/`aud` restriction. EC2/Lambda/etc. trust policies are ignored. Condition keys and common string operators are matched case-insensitively. `ForAnyValue:` is treated as the plain operator; every array element of a `sub` value list is checked.
 
 ### Bad vs fixed
 
@@ -138,6 +139,8 @@ Inputs: `path`, `format`, `fail-on`, `sarif-path`, `json-path`. Outputs: `findin
 - **JSON only.** HCL (`.tf`), YAML CloudFormation, and CDK/Pulumi sources are out of scope unless you export JSON first.
 - **No live AWS.** The tool never calls STS/IAM and cannot see roles that exist only in an account.
 - **GitHub OIDC only.** Other IdPs (ADFS, Cognito, GitLab, etc.) are not evaluated.
+- **Deny statements are not evaluated.** A sibling Deny with a tight `sub` does not satisfy an Allow that lacks one.
+- **Custom `sub` claim templates.** Policies that pin non-default claims in `sub` (for example `repository_owner_id`, custom `job_workflow_ref` layouts, or enterprise claim customization) may trip `OIDC_SUB_UNPINNED` / wildcard rules incorrectly. Prefer the standard `repo:<org>/<repo>:...` shapes, or accept a false positive and document an exception.
 - **Heuristic CFN/TF extraction.** Nested modules, `templatefile()`, `aws_iam_policy_document` data sources, and Fn::Sub-only documents may not be fully expanded.
 - **Line numbers.** SARIF locations point at the file (JSON path is in the result properties / region message), not a precise byte offset.
 - **`pull_request` subject.** A `sub` of `repo:org/name:pull_request` is treated as unpinned relative to branch/tag/environment guidance (severity `low`).

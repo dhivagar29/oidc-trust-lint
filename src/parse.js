@@ -14,6 +14,8 @@ import path from 'node:path';
 export const GITHUB_OIDC_HOST = 'token.actions.githubusercontent.com';
 export const EXPECTED_AUD = 'sts.amazonaws.com';
 
+const HOST_LOWER = GITHUB_OIDC_HOST.toLowerCase();
+
 /**
  * @typedef {{ file: string, source: string, pathPrefix: string, policy: object }} PolicyDoc
  */
@@ -72,10 +74,7 @@ export function extractPolicies(data, file = '<memory>') {
     return docs;
   }
 
-  // Terraform JSON (resource map or full config)
   collectTerraform(data, file, '$', docs);
-
-  // CloudFormation template
   collectCloudFormation(data, file, '$', docs);
 
   return docs;
@@ -122,7 +121,6 @@ function normalizeStatement(stmt) {
 function collectTerraform(data, file, prefix, docs) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return;
 
-  // resource.aws_iam_role.<name>
   const resource = data.resource;
   if (resource && typeof resource === 'object') {
     const roles = resource.aws_iam_role;
@@ -152,7 +150,6 @@ function collectTerraform(data, file, prefix, docs) {
     }
   }
 
-  // Top-level aws_iam_role (flattened export)
   if (data.aws_iam_role && typeof data.aws_iam_role === 'object') {
     for (const [name, cfg] of Object.entries(data.aws_iam_role)) {
       const bodies = Array.isArray(cfg) ? cfg : [cfg];
@@ -221,18 +218,18 @@ function pushParsedString(str, file, pathPrefix, source, docs) {
 /**
  * True if a statement targets GitHub Actions OIDC
  * (Federated principal mentions token.actions.githubusercontent.com,
- *  or Condition keys use that host).
+ *  or Condition keys use that host). Case-insensitive on keys/host.
  */
 export function isGitHubOidcStatement(stmt) {
   const federated = flattenValues(stmt?.Principal?.Federated ?? stmt?.Principal?.federated);
-  if (federated.some((v) => String(v).includes(GITHUB_OIDC_HOST))) return true;
+  if (federated.some((v) => String(v).toLowerCase().includes(HOST_LOWER))) return true;
 
   const cond = stmt?.Condition;
   if (!cond || typeof cond !== 'object') return false;
   for (const op of Object.values(cond)) {
     if (!op || typeof op !== 'object') continue;
     for (const key of Object.keys(op)) {
-      if (key.includes(GITHUB_OIDC_HOST)) return true;
+      if (key.toLowerCase().includes(HOST_LOWER)) return true;
     }
   }
   return false;
@@ -247,22 +244,87 @@ export function flattenActions(action) {
   return flattenValues(action).map(String);
 }
 
+const KNOWN_OPS = new Map([
+  ['stringequals', 'StringEquals'],
+  ['stringlike', 'StringLike'],
+  ['stringnotequals', 'StringNotEquals'],
+  ['stringnotlike', 'StringNotLike'],
+  ['stringequalsignorecase', 'StringEqualsIgnoreCase'],
+  ['stringnotequalsignorecase', 'StringNotEqualsIgnoreCase'],
+]);
+
+/**
+ * Split "ForAllValues:StringEquals" / "ForAnyValue:StringLike" (case-insensitive).
+ * @returns {{ quantifier: null|'ForAllValues'|'ForAnyValue', operator: string, rawOperator: string }}
+ */
+export function parseConditionOperator(rawOperator) {
+  const raw = String(rawOperator);
+  const m = raw.match(/^(ForAllValues|ForAnyValue)\s*:\s*(.+)$/i);
+  let quantifier = null;
+  let rest = raw;
+  if (m) {
+    quantifier = /^forallvalues$/i.test(m[1]) ? 'ForAllValues' : 'ForAnyValue';
+    rest = m[2];
+  }
+  const known = KNOWN_OPS.get(rest.replace(/\s+/g, '').toLowerCase());
+  return {
+    quantifier,
+    operator: known || rest,
+    rawOperator: raw,
+  };
+}
+
+/**
+ * @param {string} key
+ * @returns {{ keyLower: string, claim: string|null, isOidc: boolean }}
+ */
+export function classifyConditionKey(key) {
+  const keyLower = String(key).toLowerCase();
+  const isOidc = keyLower.includes(HOST_LOWER);
+  let claim = null;
+  if (isOidc) {
+    const idx = keyLower.lastIndexOf(':');
+    if (idx >= 0) claim = keyLower.slice(idx + 1);
+  }
+  return { keyLower, claim, isOidc };
+}
+
 /**
  * Collect Condition key/value pairs across operators.
- * @returns {{ operator: string, key: string, values: string[], jsonPath: string }[]}
+ * Keys and operator names are classified case-insensitively.
+ * ForAllValues: / ForAnyValue: prefixes become `quantifier`.
+ *
+ * @returns {{
+ *   operator: string,
+ *   rawOperator: string,
+ *   quantifier: null|'ForAllValues'|'ForAnyValue',
+ *   key: string,
+ *   keyLower: string,
+ *   claim: string|null,
+ *   isOidc: boolean,
+ *   values: string[],
+ *   jsonPath: string,
+ * }[]}
  */
 export function listConditions(stmt, stmtPath) {
   const cond = stmt?.Condition;
   if (!cond || typeof cond !== 'object') return [];
   const out = [];
-  for (const [operator, map] of Object.entries(cond)) {
+  for (const [rawOperator, map] of Object.entries(cond)) {
     if (!map || typeof map !== 'object') continue;
-    for (const [key, raw] of Object.entries(map)) {
+    const { quantifier, operator, rawOperator: raw } = parseConditionOperator(rawOperator);
+    for (const [key, rawVal] of Object.entries(map)) {
+      const meta = classifyConditionKey(key);
       out.push({
         operator,
+        rawOperator: raw,
+        quantifier,
         key,
-        values: flattenValues(raw).map(String),
-        jsonPath: `${stmtPath}.Condition.${operator}["${key}"]`,
+        keyLower: meta.keyLower,
+        claim: meta.claim,
+        isOidc: meta.isOidc,
+        values: flattenValues(rawVal).map(String),
+        jsonPath: `${stmtPath}.Condition.${raw}["${key}"]`,
       });
     }
   }
@@ -271,4 +333,16 @@ export function listConditions(stmt, stmtPath) {
 
 export function oidcClaimKey(claim) {
   return `${GITHUB_OIDC_HOST}:${claim}`;
+}
+
+/** Positive (allowlisting) string operators for sub/aud. */
+export function isPositiveStringOp(operator) {
+  const n = String(operator).replace(/\s+/g, '').toLowerCase();
+  return n === 'stringequals' || n === 'stringlike' || n === 'stringequalsignorecase';
+}
+
+/** Negative string operators. */
+export function isNegativeStringOp(operator) {
+  const n = String(operator).replace(/\s+/g, '').toLowerCase();
+  return n === 'stringnotequals' || n === 'stringnotlike' || n === 'stringnotequalsignorecase';
 }

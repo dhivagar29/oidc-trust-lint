@@ -1,4 +1,22 @@
-oidc-trust-lint: 18 finding(s)
+oidc-trust-lint: 28 finding(s)
+
+[CRITICAL] OIDC_SUB_MISSING
+  file:    test/fixtures/bad/allow-no-sub-deny-with-sub.json
+  path:    $.Statement[0].Condition
+  message: No "token.actions.githubusercontent.com:sub" condition. Any GitHub repository that can obtain an OIDC token may assume this role.
+  fix:     Add a StringLike/StringEquals condition on "token.actions.githubusercontent.com:sub" pinned to repo:<org>/<repo>:...
+
+[CRITICAL] OIDC_SUB_FORALLVALUES
+  file:    test/fixtures/bad/forallvalues-sub.json
+  path:    $.Statement[0].Condition.ForAllValues:StringLike["token.actions.githubusercontent.com:sub"]
+  message: ForAllValues on "token.actions.githubusercontent.com:sub" does not restrict a single-valued claim: the condition is true when the key is absent from the request context. Treat this as no sub restriction.
+  fix:     Use StringEquals or StringLike (optionally ForAnyValue:) on "token.actions.githubusercontent.com:sub" without ForAllValues.
+
+[CRITICAL] OIDC_SUB_MISSING
+  file:    test/fixtures/bad/forallvalues-sub.json
+  path:    $.Statement[0].Condition
+  message: No positive StringEquals/StringLike "token.actions.githubusercontent.com:sub" condition (only StringNot*/ForAllValues). Negations alone do not pin which repos may assume.
+  fix:     Add a StringEquals or StringLike condition on "token.actions.githubusercontent.com:sub" pinned to repo:<org>/<repo>:...
 
 [CRITICAL] OIDC_AUD_MISSING
   file:    test/fixtures/bad/missing-aud.json
@@ -12,6 +30,18 @@ oidc-trust-lint: 18 finding(s)
   message: No "token.actions.githubusercontent.com:sub" condition. Any GitHub repository that can obtain an OIDC token may assume this role.
   fix:     Add a StringLike/StringEquals condition on "token.actions.githubusercontent.com:sub" pinned to repo:<org>/<repo>:...
 
+[CRITICAL] OIDC_SUB_MISSING
+  file:    test/fixtures/bad/stringnotequals-sub-only.json
+  path:    $.Statement[0].Condition
+  message: No positive StringEquals/StringLike "token.actions.githubusercontent.com:sub" condition (only StringNot*/ForAllValues). Negations alone do not pin which repos may assume.
+  fix:     Add a StringEquals or StringLike condition on "token.actions.githubusercontent.com:sub" pinned to repo:<org>/<repo>:...
+
+[CRITICAL] OIDC_SUB_MISSING
+  file:    test/fixtures/bad/stringnotlike-sub-only.json
+  path:    $.Statement[0].Condition
+  message: No positive StringEquals/StringLike "token.actions.githubusercontent.com:sub" condition (only StringNot*/ForAllValues). Negations alone do not pin which repos may assume.
+  fix:     Add a StringEquals or StringLike condition on "token.actions.githubusercontent.com:sub" pinned to repo:<org>/<repo>:...
+
 [CRITICAL] OIDC_PRINCIPAL_WRONG
   file:    test/fixtures/bad/wildcard-principal.json
   path:    $.Statement[0].Principal.Federated
@@ -23,6 +53,24 @@ oidc-trust-lint: 18 finding(s)
   path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
   message: Subject "repo:*" allows any organization/repository on GitHub.
   fix:     Pin sub to repo:<org>/<repo>:ref:refs/heads/<branch> (or environment:/job_workflow_ref:).
+
+[CRITICAL] OIDC_SUB_WILDCARD_ANY
+  file:    test/fixtures/bad/wildcard-sub-array-second.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:myorg*" has a wildcard in the org segment ("myorg*"), so it can span other organizations (e.g. myorg* matches myorg-evil/...).
+  fix:     Pin the organization name with no * or ?: repo:<exact-org>/<repo>:...
+
+[CRITICAL] OIDC_SUB_WILDCARD_ANY
+  file:    test/fixtures/bad/wildcard-sub-org-prefix.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:myorg*" has a wildcard in the org segment ("myorg*"), so it can span other organizations (e.g. myorg* matches myorg-evil/...).
+  fix:     Pin the organization name with no * or ?: repo:<exact-org>/<repo>:...
+
+[CRITICAL] OIDC_SUB_WILDCARD_ANY
+  file:    test/fixtures/bad/wildcard-sub-question-org.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:acm?/widgets:ref:refs/heads/main" has a wildcard in the org segment ("acm?"), so it can span other organizations (e.g. myorg* matches myorg-evil/...).
+  fix:     Pin the organization name with no * or ?: repo:<exact-org>/<repo>:...
 
 [CRITICAL] OIDC_AUD_WRONG
   file:    test/fixtures/bad/wrong-aud.json
@@ -48,6 +96,12 @@ oidc-trust-lint: 18 finding(s)
   message: Subject "repo:*" allows any organization/repository on GitHub.
   fix:     Pin sub to repo:<org>/<repo>:ref:refs/heads/<branch> (or environment:/job_workflow_ref:).
 
+[HIGH] OIDC_SUB_WILDCARD_ORG
+  file:    test/fixtures/bad/foranyvalue-wildcard-sub.json
+  path:    $.Statement[0].Condition.ForAnyValue:StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:acme/*" allows any repository under org "acme".
+  fix:     Pin to a single repository, e.g. repo:acme/<repo>:ref:refs/heads/main.
+
 [HIGH] OIDC_RISKY_PRINCIPALS
   file:    test/fixtures/bad/risky-principals.json
   path:    $.Statement[0].Principal
@@ -64,6 +118,12 @@ oidc-trust-lint: 18 finding(s)
   file:    test/fixtures/bad/wildcard-sub-org.json
   path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
   message: Subject "repo:acme/*" allows any repository under org "acme".
+  fix:     Pin to a single repository, e.g. repo:acme/<repo>:ref:refs/heads/main.
+
+[HIGH] OIDC_SUB_WILDCARD_ORG
+  file:    test/fixtures/bad/wildcard-sub-question.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:acme/?:ref:refs/heads/main" allows any repository under org "acme".
   fix:     Pin to a single repository, e.g. repo:acme/<repo>:ref:refs/heads/main.
 
 [MEDIUM] OIDC_STRINGLIKE_UNNECESSARY

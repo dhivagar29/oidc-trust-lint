@@ -1,4 +1,4 @@
-oidc-trust-lint: 28 finding(s)
+oidc-trust-lint: 30 finding(s)
 
 [CRITICAL] OIDC_SUB_MISSING
   file:    test/fixtures/bad/allow-no-sub-deny-with-sub.json
@@ -108,6 +108,12 @@ oidc-trust-lint: 28 finding(s)
   message: sts:AssumeRoleWithWebIdentity is Allow alongside other principals: AWS=*.
   fix:     Keep GitHub OIDC assume statements limited to Principal.Federated for the GitHub OIDC provider. Split unrelated trust into separate statements or roles.
 
+[HIGH] OIDC_SUB_WILDCARD_ORG
+  file:    test/fixtures/bad/stringlike-org-star.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:acme/*" allows any repository under org "acme".
+  fix:     Pin to a single repository, e.g. repo:acme/<repo>:ref:refs/heads/main.
+
 [HIGH] OIDC_RISKY_PRINCIPALS
   file:    test/fixtures/bad/wildcard-principal.json
   path:    $.Statement[0].Principal
@@ -161,6 +167,12 @@ oidc-trust-lint: 28 finding(s)
   path:    $.resource.aws_iam_role.gha[0].assume_role_policy.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:aud"]
   message: StringLike used for "token.actions.githubusercontent.com:aud" but value(s) contain no wildcards: "sts.amazonaws.com".
   fix:     Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?.
+
+[LOW] OIDC_SUB_LITERAL_WILDCARD
+  file:    test/fixtures/bad/stringequals-literal-star.json
+  path:    $.Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:acme/*" uses StringEquals, which treats "*" and "?" as literal characters. No GitHub OIDC token will match, so this role cannot be assumed.
+  fix:     Use StringLike with a pinned repo (and ref/environment), e.g. StringLike "token.actions.githubusercontent.com:sub": "repo:<org>/<repo>:ref:refs/heads/<branch>" — or drop the * / ? and use StringEquals for an exact sub.
 
 [LOW] OIDC_SUB_UNPINNED
   file:    test/fixtures/bad/sub-unpinned.json

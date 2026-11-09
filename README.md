@@ -24,8 +24,9 @@ A trust policy that federates `token.actions.githubusercontent.com` without a ti
 | `OIDC_RISKY_PRINCIPALS` | high | `sts:AssumeRoleWithWebIdentity` combined with other principals (e.g. `AWS: *`) |
 | `OIDC_STRINGLIKE_UNNECESSARY` | medium | `StringLike` used when values have no `*` / `?` |
 | `OIDC_SUB_UNPINNED` | low | `sub` not pinned to a concrete branch, tag, or environment |
+| `OIDC_SUB_LITERAL_WILDCARD` | low | `StringEquals` / `StringEqualsIgnoreCase` (incl. `ForAnyValue:`) with `*` or `?` in `sub` — treated as literals, so the role cannot be assumed; use `StringLike` with a pinned repo instead |
 
-Only **Allow** statements that look like GitHub OIDC trust (Federated principal or condition keys for `token.actions.githubusercontent.com`) are evaluated. **Deny statements are skipped** and never count as the Allow's `sub`/`aud` restriction. EC2/Lambda/etc. trust policies are ignored. Condition keys and common string operators are matched case-insensitively. `ForAnyValue:` is treated as the plain operator; every array element of a `sub` value list is checked.
+Only **Allow** statements that look like GitHub OIDC trust (Federated principal or condition keys for `token.actions.githubusercontent.com`) are evaluated. **Deny statements are skipped** and never count as the Allow's `sub`/`aud` restriction. EC2/Lambda/etc. trust policies are ignored. Condition keys and common string operators are matched case-insensitively. `ForAnyValue:` is treated as the plain operator; every array element of a `sub` value list is checked. Under `StringEquals` / `StringEqualsIgnoreCase`, `*` and `?` are literal characters (not wildcards) — see `OIDC_SUB_LITERAL_WILDCARD`.
 
 ### Bad vs fixed
 

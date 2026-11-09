@@ -156,6 +156,28 @@ describe('Mafee review: wildcards', () => {
   });
 });
 
+
+describe('Mafee review: StringEquals literal * / ?', () => {
+  it('StringEquals repo:acme/* => only OIDC_SUB_LITERAL_WILDCARD', () => {
+    const { findings } = lintPaths([fx('bad', 'stringequals-literal-star.json')]);
+    const ruleIds = ids(findings);
+    assert.ok(ruleIds.includes('OIDC_SUB_LITERAL_WILDCARD'));
+    assert.ok(!ruleIds.includes('OIDC_SUB_WILDCARD_ORG'));
+    assert.ok(!ruleIds.includes('OIDC_SUB_WILDCARD_ANY'));
+    const lit = findings.filter((f) => f.ruleId === 'OIDC_SUB_LITERAL_WILDCARD');
+    assert.equal(lit.length, 1);
+    assert.equal(lit[0].severity, 'low');
+    assert.match(lit[0].message, /literal/i);
+  });
+
+  it('StringLike repo:acme/* => OIDC_SUB_WILDCARD_ORG', () => {
+    const { findings } = lintPaths([fx('bad', 'stringlike-org-star.json')]);
+    const ruleIds = ids(findings);
+    assert.ok(ruleIds.includes('OIDC_SUB_WILDCARD_ORG'));
+    assert.ok(!ruleIds.includes('OIDC_SUB_LITERAL_WILDCARD'));
+  });
+});
+
 describe('terraform and cloudformation', () => {
   it('extracts terraform assume_role_policy string and flags repo:*', () => {
     const { findings } = lintPaths([fx('terraform', 'aws_iam_role.json')]);
@@ -193,6 +215,7 @@ describe('RULES catalog', () => {
       'OIDC_SUB_WILDCARD_ORG',
       'OIDC_STRINGLIKE_UNNECESSARY',
       'OIDC_SUB_UNPINNED',
+      'OIDC_SUB_LITERAL_WILDCARD',
       'OIDC_PRINCIPAL_WRONG',
       'OIDC_RISKY_PRINCIPALS',
     ];

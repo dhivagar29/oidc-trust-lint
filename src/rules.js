@@ -58,6 +58,11 @@ export const RULES = {
     severity: 'low',
     title: 'Subject not pinned to a branch, tag, or environment',
   },
+  OIDC_SUB_LITERAL_WILDCARD: {
+    id: 'OIDC_SUB_LITERAL_WILDCARD',
+    severity: 'low',
+    title: 'Exact-match operator treats * / ? as literal characters',
+  },
   OIDC_PRINCIPAL_WRONG: {
     id: 'OIDC_PRINCIPAL_WRONG',
     severity: 'critical',
@@ -281,13 +286,31 @@ function hasWildcardChar(v) {
   return /[*?]/.test(v);
 }
 
+/** StringEquals / StringEqualsIgnoreCase treat * and ? as literals (incl. ForAnyValue:). */
+function isExactMatchOp(operator) {
+  const n = String(operator).replace(/\s+/g, '').toLowerCase();
+  return n === 'stringequals' || n === 'stringequalsignorecase';
+}
+
 /**
  * Classify one sub value. Every array element is checked independently.
+ * Under exact-match operators, * / ? are literals → OIDC_SUB_LITERAL_WILDCARD (not WILDCARD_*).
  */
 function classifySub(doc, entry, value) {
   const findings = [];
   const v = String(value);
+  const exact = isExactMatchOp(entry.operator);
 
+  // Exact-match + * or ? → role is effectively unassumable (literals), not a broad grant.
+  if (exact && hasWildcardChar(v)) {
+    findings.push(finding(RULES.OIDC_SUB_LITERAL_WILDCARD, doc, entry.jsonPath,
+      `Subject "${v}" uses ${entry.operator}, which treats "*" and "?" as literal characters. No GitHub OIDC token will match, so this role cannot be assumed.`,
+      'Use StringLike with a pinned repo (and ref/environment), e.g. StringLike "token.actions.githubusercontent.com:sub": "repo:<org>/<repo>:ref:refs/heads/<branch>" — or drop the * / ? and use StringEquals for an exact sub.',
+    ));
+    return findings;
+  }
+
+  // Pattern operators (StringLike): real wildcards
   // Bare * or repo:* / repo:*:... → any org/repo
   if (
     v === '*' ||
@@ -304,7 +327,6 @@ function classifySub(doc, entry, value) {
   }
 
   // Cross-org: wildcard in the org segment (before the first '/'), e.g. repo:myorg*
-  // or repo:my?rg/widgets — spans other orgs like myorg-evil.
   const crossOrg = v.match(/^repo:([^/]*[*?][^/]*)(\/.*)?$/i);
   if (crossOrg) {
     findings.push(finding(RULES.OIDC_SUB_WILDCARD_ANY, doc, entry.jsonPath,
@@ -314,7 +336,7 @@ function classifySub(doc, entry, value) {
     return findings;
   }
 
-  // repo:org/* or repo:org/*:* → any repo in a fixed org (wildcard only after '/')
+  // repo:org/* → any repo in a fixed org
   const orgWild = v.match(/^repo:([^:/?*]+)\/[*?](.*)$/);
   if (orgWild) {
     findings.push(finding(RULES.OIDC_SUB_WILDCARD_ORG, doc, entry.jsonPath,
@@ -323,9 +345,6 @@ function classifySub(doc, entry, value) {
     ));
     return findings;
   }
-
-  // Also org-wide with ? in repo segment after slash: repo:org/? or repo:org/*
-  // covered above. repo:org/foo* is a single-repo prefix wild → unpinned warning path.
 
   if (isUnpinnedSub(v)) {
     findings.push(finding(RULES.OIDC_SUB_UNPINNED, doc, entry.jsonPath,

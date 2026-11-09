@@ -194,6 +194,29 @@
               }
             },
             {
+              "id": "OIDC_SUB_LITERAL_WILDCARD",
+              "name": "OIDC_SUB_LITERAL_WILDCARD",
+              "shortDescription": {
+                "text": "Exact-match operator treats * / ? as literal characters"
+              },
+              "fullDescription": {
+                "text": "Exact-match operator treats * / ? as literal characters"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "severity": "low",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            },
+            {
               "id": "OIDC_PRINCIPAL_WRONG",
               "name": "OIDC_PRINCIPAL_WRONG",
               "shortDescription": {
@@ -730,6 +753,33 @@
           }
         },
         {
+          "ruleId": "OIDC_SUB_WILDCARD_ORG",
+          "level": "error",
+          "message": {
+            "text": "Subject \"repo:acme/*\" allows any repository under org \"acme\". Fix: Pin to a single repository, e.g. repo:acme/<repo>:ref:refs/heads/main."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/stringlike-org-star.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]",
+            "severity": "high",
+            "fix": "Pin to a single repository, e.g. repo:acme/<repo>:ref:refs/heads/main."
+          }
+        },
+        {
           "ruleId": "OIDC_RISKY_PRINCIPALS",
           "level": "error",
           "message": {
@@ -970,6 +1020,33 @@
             "jsonPath": "$.resource.aws_iam_role.gha[0].assume_role_policy.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]",
             "severity": "medium",
             "fix": "Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          }
+        },
+        {
+          "ruleId": "OIDC_SUB_LITERAL_WILDCARD",
+          "level": "note",
+          "message": {
+            "text": "Subject \"repo:acme/*\" uses StringEquals, which treats \"*\" and \"?\" as literal characters. No GitHub OIDC token will match, so this role cannot be assumed. Fix: Use StringLike with a pinned repo (and ref/environment), e.g. StringLike \"token.actions.githubusercontent.com:sub\": \"repo:<org>/<repo>:ref:refs/heads/<branch>\" — or drop the * / ? and use StringEquals for an exact sub."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/stringequals-literal-star.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringEquals[\"token.actions.githubusercontent.com:sub\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringEquals[\"token.actions.githubusercontent.com:sub\"]",
+            "severity": "low",
+            "fix": "Use StringLike with a pinned repo (and ref/environment), e.g. StringLike \"token.actions.githubusercontent.com:sub\": \"repo:<org>/<repo>:ref:refs/heads/<branch>\" — or drop the * / ? and use StringEquals for an exact sub."
           }
         },
         {

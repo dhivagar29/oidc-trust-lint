@@ -54,8 +54,10 @@ runs:
         ACTION_PATH: ${{ github.action_path }}
       run: |
         set -euo pipefail
+        set -f
         # shellcheck disable=SC2206
         PATHS=( ${INPUT_PATH} )
+        set +f
         ARGS=(node "$ACTION_PATH/src/cli.js" --format "$INPUT_FORMAT" --fail-on "$INPUT_FAIL_ON")
         if [ -n "${INPUT_SARIF}" ]; then
           ARGS+=(--sarif "$INPUT_SARIF")

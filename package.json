@@ -1,0 +1,21 @@
+{
+  "name": "oidc-trust-lint",
+  "version": "1.0.0",
+  "description": "Lint AWS IAM role trust policies for GitHub Actions OIDC misconfigurations (offline, policy files only)",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "oidc-trust-lint": "src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "lint-policies": "node src/cli.js",
+    "sample": "node scripts/generate-sample.js"
+  },
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}

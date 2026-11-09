@@ -1,0 +1,712 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "oidc-trust-lint",
+          "version": "1.0.0",
+          "informationUri": "https://github.com/dhivagar29/oidc-trust-lint",
+          "rules": [
+            {
+              "id": "OIDC_AUD_MISSING",
+              "name": "OIDC_AUD_MISSING",
+              "shortDescription": {
+                "text": "Missing audience (aud) condition"
+              },
+              "fullDescription": {
+                "text": "Missing audience (aud) condition"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "severity": "critical",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            },
+            {
+              "id": "OIDC_AUD_WRONG",
+              "name": "OIDC_AUD_WRONG",
+              "shortDescription": {
+                "text": "Audience (aud) is not sts.amazonaws.com"
+              },
+              "fullDescription": {
+                "text": "Audience (aud) is not sts.amazonaws.com"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "severity": "critical",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            },
+            {
+              "id": "OIDC_SUB_MISSING",
+              "name": "OIDC_SUB_MISSING",
+              "shortDescription": {
+                "text": "Missing subject (sub) condition"
+              },
+              "fullDescription": {
+                "text": "Missing subject (sub) condition"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "severity": "critical",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            },
+            {
+              "id": "OIDC_SUB_WILDCARD_ANY",
+              "name": "OIDC_SUB_WILDCARD_ANY",
+              "shortDescription": {
+                "text": "Subject wildcard allows any GitHub org/repo"
+              },
+              "fullDescription": {
+                "text": "Subject wildcard allows any GitHub org/repo"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "severity": "critical",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            },
+            {
+              "id": "OIDC_SUB_WILDCARD_ORG",
+              "name": "OIDC_SUB_WILDCARD_ORG",
+              "shortDescription": {
+                "text": "Subject wildcard allows any repo in an org"
+              },
+              "fullDescription": {
+                "text": "Subject wildcard allows any repo in an org"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "severity": "high",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            },
+            {
+              "id": "OIDC_STRINGLIKE_UNNECESSARY",
+              "name": "OIDC_STRINGLIKE_UNNECESSARY",
+              "shortDescription": {
+                "text": "StringLike used where StringEquals suffices"
+              },
+              "fullDescription": {
+                "text": "StringLike used where StringEquals suffices"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "severity": "medium",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            },
+            {
+              "id": "OIDC_SUB_UNPINNED",
+              "name": "OIDC_SUB_UNPINNED",
+              "shortDescription": {
+                "text": "Subject not pinned to a branch, tag, or environment"
+              },
+              "fullDescription": {
+                "text": "Subject not pinned to a branch, tag, or environment"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "severity": "low",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            },
+            {
+              "id": "OIDC_PRINCIPAL_WRONG",
+              "name": "OIDC_PRINCIPAL_WRONG",
+              "shortDescription": {
+                "text": "Wrong or wildcard Federated principal for GitHub OIDC"
+              },
+              "fullDescription": {
+                "text": "Wrong or wildcard Federated principal for GitHub OIDC"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "severity": "critical",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            },
+            {
+              "id": "OIDC_RISKY_PRINCIPALS",
+              "name": "OIDC_RISKY_PRINCIPALS",
+              "shortDescription": {
+                "text": "AssumeRoleWithWebIdentity combined with other risky principals"
+              },
+              "fullDescription": {
+                "text": "AssumeRoleWithWebIdentity combined with other risky principals"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "severity": "high",
+                "tags": [
+                  "security",
+                  "oidc",
+                  "aws",
+                  "iam",
+                  "github-actions"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "OIDC_AUD_MISSING",
+          "level": "error",
+          "message": {
+            "text": "No \"token.actions.githubusercontent.com:aud\" condition. Tokens with any audience may be accepted. Fix: Add StringEquals \"token.actions.githubusercontent.com:aud\": \"sts.amazonaws.com\"."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/missing-aud.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition",
+            "severity": "critical",
+            "fix": "Add StringEquals \"token.actions.githubusercontent.com:aud\": \"sts.amazonaws.com\"."
+          }
+        },
+        {
+          "ruleId": "OIDC_SUB_MISSING",
+          "level": "error",
+          "message": {
+            "text": "No \"token.actions.githubusercontent.com:sub\" condition. Any GitHub repository that can obtain an OIDC token may assume this role. Fix: Add a StringLike/StringEquals condition on \"token.actions.githubusercontent.com:sub\" pinned to repo:<org>/<repo>:..."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/missing-sub.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition",
+            "severity": "critical",
+            "fix": "Add a StringLike/StringEquals condition on \"token.actions.githubusercontent.com:sub\" pinned to repo:<org>/<repo>:..."
+          }
+        },
+        {
+          "ruleId": "OIDC_PRINCIPAL_WRONG",
+          "level": "error",
+          "message": {
+            "text": "Federated principal contains a wildcard: \"*\". Fix: Pin Principal.Federated to the account OIDC provider ARN for token.actions.githubusercontent.com."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/wildcard-principal.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Principal.Federated"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Principal.Federated",
+            "severity": "critical",
+            "fix": "Pin Principal.Federated to the account OIDC provider ARN for token.actions.githubusercontent.com."
+          }
+        },
+        {
+          "ruleId": "OIDC_SUB_WILDCARD_ANY",
+          "level": "error",
+          "message": {
+            "text": "Subject \"repo:*\" allows any organization/repository on GitHub. Fix: Pin sub to repo:<org>/<repo>:ref:refs/heads/<branch> (or environment:/job_workflow_ref:)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/wildcard-sub-any-repo.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]",
+            "severity": "critical",
+            "fix": "Pin sub to repo:<org>/<repo>:ref:refs/heads/<branch> (or environment:/job_workflow_ref:)."
+          }
+        },
+        {
+          "ruleId": "OIDC_AUD_WRONG",
+          "level": "error",
+          "message": {
+            "text": "Audience values [\"https://github.com/acme\"] do not include \"sts.amazonaws.com\". Fix: Set \"token.actions.githubusercontent.com:aud\" to \"sts.amazonaws.com\" (StringEquals)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/wrong-aud.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringEquals[\"token.actions.githubusercontent.com:aud\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringEquals[\"token.actions.githubusercontent.com:aud\"]",
+            "severity": "critical",
+            "fix": "Set \"token.actions.githubusercontent.com:aud\" to \"sts.amazonaws.com\" (StringEquals)."
+          }
+        },
+        {
+          "ruleId": "OIDC_PRINCIPAL_WRONG",
+          "level": "error",
+          "message": {
+            "text": "Federated principal is not a well-formed IAM OIDC provider ARN: \"token.actions.githubusercontent.com\". Fix: Expected arn:aws:iam::<12-digit-account>:oidc-provider/token.actions.githubusercontent.com."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/wrong-principal.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Principal.Federated"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Principal.Federated",
+            "severity": "critical",
+            "fix": "Expected arn:aws:iam::<12-digit-account>:oidc-provider/token.actions.githubusercontent.com."
+          }
+        },
+        {
+          "ruleId": "OIDC_SUB_MISSING",
+          "level": "error",
+          "message": {
+            "text": "No \"token.actions.githubusercontent.com:sub\" condition. Any GitHub repository that can obtain an OIDC token may assume this role. Fix: Add a StringLike/StringEquals condition on \"token.actions.githubusercontent.com:sub\" pinned to repo:<org>/<repo>:..."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/cloudformation/iam_role.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Resources.GitHubDeployRole.Properties.AssumeRolePolicyDocument.Statement[0].Condition"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Resources.GitHubDeployRole.Properties.AssumeRolePolicyDocument.Statement[0].Condition",
+            "severity": "critical",
+            "fix": "Add a StringLike/StringEquals condition on \"token.actions.githubusercontent.com:sub\" pinned to repo:<org>/<repo>:..."
+          }
+        },
+        {
+          "ruleId": "OIDC_SUB_WILDCARD_ANY",
+          "level": "error",
+          "message": {
+            "text": "Subject \"repo:*\" allows any organization/repository on GitHub. Fix: Pin sub to repo:<org>/<repo>:ref:refs/heads/<branch> (or environment:/job_workflow_ref:)."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/terraform/aws_iam_role.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.resource.aws_iam_role.gha[0].assume_role_policy.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.resource.aws_iam_role.gha[0].assume_role_policy.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]",
+            "severity": "critical",
+            "fix": "Pin sub to repo:<org>/<repo>:ref:refs/heads/<branch> (or environment:/job_workflow_ref:)."
+          }
+        },
+        {
+          "ruleId": "OIDC_RISKY_PRINCIPALS",
+          "level": "error",
+          "message": {
+            "text": "sts:AssumeRoleWithWebIdentity is Allow alongside other principals: AWS=*. Fix: Keep GitHub OIDC assume statements limited to Principal.Federated for the GitHub OIDC provider. Split unrelated trust into separate statements or roles."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/risky-principals.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Principal"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Principal",
+            "severity": "high",
+            "fix": "Keep GitHub OIDC assume statements limited to Principal.Federated for the GitHub OIDC provider. Split unrelated trust into separate statements or roles."
+          }
+        },
+        {
+          "ruleId": "OIDC_RISKY_PRINCIPALS",
+          "level": "error",
+          "message": {
+            "text": "sts:AssumeRoleWithWebIdentity is Allow alongside other principals: Federated=*. Fix: Keep GitHub OIDC assume statements limited to Principal.Federated for the GitHub OIDC provider. Split unrelated trust into separate statements or roles."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/wildcard-principal.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Principal"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Principal",
+            "severity": "high",
+            "fix": "Keep GitHub OIDC assume statements limited to Principal.Federated for the GitHub OIDC provider. Split unrelated trust into separate statements or roles."
+          }
+        },
+        {
+          "ruleId": "OIDC_SUB_WILDCARD_ORG",
+          "level": "error",
+          "message": {
+            "text": "Subject \"repo:acme/*\" allows any repository under org \"acme\". Fix: Pin to a single repository, e.g. repo:acme/<repo>:ref:refs/heads/main."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/wildcard-sub-org.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]",
+            "severity": "high",
+            "fix": "Pin to a single repository, e.g. repo:acme/<repo>:ref:refs/heads/main."
+          }
+        },
+        {
+          "ruleId": "OIDC_STRINGLIKE_UNNECESSARY",
+          "level": "warning",
+          "message": {
+            "text": "StringLike used for \"token.actions.githubusercontent.com:aud\" but value(s) contain no wildcards: \"sts.amazonaws.com\". Fix: Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/stringlike-equals.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]",
+            "severity": "medium",
+            "fix": "Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          }
+        },
+        {
+          "ruleId": "OIDC_STRINGLIKE_UNNECESSARY",
+          "level": "warning",
+          "message": {
+            "text": "StringLike used for \"token.actions.githubusercontent.com:sub\" but value(s) contain no wildcards: \"repo:acme/widgets:ref:refs/heads/main\". Fix: Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/stringlike-equals.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]",
+            "severity": "medium",
+            "fix": "Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          }
+        },
+        {
+          "ruleId": "OIDC_STRINGLIKE_UNNECESSARY",
+          "level": "warning",
+          "message": {
+            "text": "StringLike used for \"token.actions.githubusercontent.com:aud\" but value(s) contain no wildcards: \"sts.amazonaws.com\". Fix: Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/sub-unpinned.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]",
+            "severity": "medium",
+            "fix": "Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          }
+        },
+        {
+          "ruleId": "OIDC_STRINGLIKE_UNNECESSARY",
+          "level": "warning",
+          "message": {
+            "text": "StringLike used for \"token.actions.githubusercontent.com:aud\" but value(s) contain no wildcards: \"sts.amazonaws.com\". Fix: Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/wildcard-sub-any-repo.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]",
+            "severity": "medium",
+            "fix": "Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          }
+        },
+        {
+          "ruleId": "OIDC_STRINGLIKE_UNNECESSARY",
+          "level": "warning",
+          "message": {
+            "text": "StringLike used for \"token.actions.githubusercontent.com:aud\" but value(s) contain no wildcards: \"sts.amazonaws.com\". Fix: Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/wildcard-sub-org.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]",
+            "severity": "medium",
+            "fix": "Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          }
+        },
+        {
+          "ruleId": "OIDC_STRINGLIKE_UNNECESSARY",
+          "level": "warning",
+          "message": {
+            "text": "StringLike used for \"token.actions.githubusercontent.com:aud\" but value(s) contain no wildcards: \"sts.amazonaws.com\". Fix: Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/terraform/aws_iam_role.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.resource.aws_iam_role.gha[0].assume_role_policy.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.resource.aws_iam_role.gha[0].assume_role_policy.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:aud\"]",
+            "severity": "medium",
+            "fix": "Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?."
+          }
+        },
+        {
+          "ruleId": "OIDC_SUB_UNPINNED",
+          "level": "note",
+          "message": {
+            "text": "Subject \"repo:acme/widgets:*\" is not pinned to a specific branch, tag, or environment. Fix: Prefer repo:<org>/<repo>:ref:refs/heads/<branch>, :environment:<name>, or :job_workflow_ref:<org>/<repo>/.github/workflows/<file>@refs/heads/<branch>."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "test/fixtures/bad/sub-unpinned.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "message": {
+                    "text": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]"
+                  }
+                }
+              }
+            }
+          ],
+          "properties": {
+            "jsonPath": "$.Statement[0].Condition.StringLike[\"token.actions.githubusercontent.com:sub\"]",
+            "severity": "low",
+            "fix": "Prefer repo:<org>/<repo>:ref:refs/heads/<branch>, :environment:<name>, or :job_workflow_ref:<org>/<repo>/.github/workflows/<file>@refs/heads/<branch>."
+          }
+        }
+      ]
+    }
+  ]
+}

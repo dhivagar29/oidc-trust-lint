@@ -1,0 +1,80 @@
+name: oidc-trust-lint
+description: Lint AWS IAM trust policy JSON files for GitHub Actions OIDC misconfigurations (offline).
+author: dhivagar29
+branding:
+  icon: shield
+  color: blue
+inputs:
+  path:
+    description: File or directory to lint (space-separated for multiple)
+    required: false
+    default: .
+  format:
+    description: Primary stdout format (text, json, or sarif)
+    required: false
+    default: text
+  fail-on:
+    description: Exit non-zero on findings at/above this severity (critical|high|medium|low|info|none)
+    required: false
+    default: high
+  sarif-path:
+    description: Optional path to write a SARIF 2.1.0 report (for code scanning upload)
+    required: false
+    default: oidc-trust-lint.sarif
+  json-path:
+    description: Optional path to write a JSON report
+    required: false
+    default: ''
+outputs:
+  sarif-path:
+    description: Path to the written SARIF file (empty if disabled)
+    value: ${{ steps.run.outputs.sarif-path }}
+  json-path:
+    description: Path to the written JSON file (empty if disabled)
+    value: ${{ steps.run.outputs.json-path }}
+  finding-count:
+    description: Number of findings
+    value: ${{ steps.run.outputs.finding-count }}
+runs:
+  using: composite
+  steps:
+    - name: Set up Node 20
+      uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+      with:
+        node-version: '20'
+    - name: Run oidc-trust-lint
+      id: run
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_SARIF: ${{ inputs.sarif-path }}
+        INPUT_JSON: ${{ inputs.json-path }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        # shellcheck disable=SC2206
+        PATHS=( ${INPUT_PATH} )
+        ARGS=(node "$ACTION_PATH/src/cli.js" --format "$INPUT_FORMAT" --fail-on "$INPUT_FAIL_ON")
+        if [ -n "${INPUT_SARIF}" ]; then
+          ARGS+=(--sarif "$INPUT_SARIF")
+        fi
+        if [ -n "${INPUT_JSON}" ]; then
+          ARGS+=(--out "$INPUT_JSON")
+        fi
+        ARGS+=("${PATHS[@]}")
+        set +e
+        "${ARGS[@]}"
+        code=$?
+        set -e
+        count=0
+        if [ -n "${INPUT_JSON}" ] && [ -f "${INPUT_JSON}" ]; then
+          count="$(node -e 'const fs=require("fs");const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));process.stdout.write(String(j.findingCount||0))' "${INPUT_JSON}")"
+        elif [ -n "${INPUT_SARIF}" ] && [ -f "${INPUT_SARIF}" ]; then
+          count="$(node -e 'const fs=require("fs");const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));const n=(j.runs&&j.runs[0]&&j.runs[0].results||[]).length;process.stdout.write(String(n))' "${INPUT_SARIF}")"
+        fi
+        echo "finding-count=${count}" >> "$GITHUB_OUTPUT"
+        echo "sarif-path=${INPUT_SARIF}" >> "$GITHUB_OUTPUT"
+        echo "json-path=${INPUT_JSON}" >> "$GITHUB_OUTPUT"
+        exit "$code"

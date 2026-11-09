@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+*.log
+.tmp/
+/oidc-trust-lint.json
+/oidc-trust-lint.sarif
+/sample-run/

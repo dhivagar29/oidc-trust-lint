@@ -1,0 +1,109 @@
+oidc-trust-lint: 18 finding(s)
+
+[CRITICAL] OIDC_AUD_MISSING
+  file:    test/fixtures/bad/missing-aud.json
+  path:    $.Statement[0].Condition
+  message: No "token.actions.githubusercontent.com:aud" condition. Tokens with any audience may be accepted.
+  fix:     Add StringEquals "token.actions.githubusercontent.com:aud": "sts.amazonaws.com".
+
+[CRITICAL] OIDC_SUB_MISSING
+  file:    test/fixtures/bad/missing-sub.json
+  path:    $.Statement[0].Condition
+  message: No "token.actions.githubusercontent.com:sub" condition. Any GitHub repository that can obtain an OIDC token may assume this role.
+  fix:     Add a StringLike/StringEquals condition on "token.actions.githubusercontent.com:sub" pinned to repo:<org>/<repo>:...
+
+[CRITICAL] OIDC_PRINCIPAL_WRONG
+  file:    test/fixtures/bad/wildcard-principal.json
+  path:    $.Statement[0].Principal.Federated
+  message: Federated principal contains a wildcard: "*".
+  fix:     Pin Principal.Federated to the account OIDC provider ARN for token.actions.githubusercontent.com.
+
+[CRITICAL] OIDC_SUB_WILDCARD_ANY
+  file:    test/fixtures/bad/wildcard-sub-any-repo.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:*" allows any organization/repository on GitHub.
+  fix:     Pin sub to repo:<org>/<repo>:ref:refs/heads/<branch> (or environment:/job_workflow_ref:).
+
+[CRITICAL] OIDC_AUD_WRONG
+  file:    test/fixtures/bad/wrong-aud.json
+  path:    $.Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:aud"]
+  message: Audience values ["https://github.com/acme"] do not include "sts.amazonaws.com".
+  fix:     Set "token.actions.githubusercontent.com:aud" to "sts.amazonaws.com" (StringEquals).
+
+[CRITICAL] OIDC_PRINCIPAL_WRONG
+  file:    test/fixtures/bad/wrong-principal.json
+  path:    $.Statement[0].Principal.Federated
+  message: Federated principal is not a well-formed IAM OIDC provider ARN: "token.actions.githubusercontent.com".
+  fix:     Expected arn:aws:iam::<12-digit-account>:oidc-provider/token.actions.githubusercontent.com.
+
+[CRITICAL] OIDC_SUB_MISSING
+  file:    test/fixtures/cloudformation/iam_role.json
+  path:    $.Resources.GitHubDeployRole.Properties.AssumeRolePolicyDocument.Statement[0].Condition
+  message: No "token.actions.githubusercontent.com:sub" condition. Any GitHub repository that can obtain an OIDC token may assume this role.
+  fix:     Add a StringLike/StringEquals condition on "token.actions.githubusercontent.com:sub" pinned to repo:<org>/<repo>:...
+
+[CRITICAL] OIDC_SUB_WILDCARD_ANY
+  file:    test/fixtures/terraform/aws_iam_role.json
+  path:    $.resource.aws_iam_role.gha[0].assume_role_policy.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:*" allows any organization/repository on GitHub.
+  fix:     Pin sub to repo:<org>/<repo>:ref:refs/heads/<branch> (or environment:/job_workflow_ref:).
+
+[HIGH] OIDC_RISKY_PRINCIPALS
+  file:    test/fixtures/bad/risky-principals.json
+  path:    $.Statement[0].Principal
+  message: sts:AssumeRoleWithWebIdentity is Allow alongside other principals: AWS=*.
+  fix:     Keep GitHub OIDC assume statements limited to Principal.Federated for the GitHub OIDC provider. Split unrelated trust into separate statements or roles.
+
+[HIGH] OIDC_RISKY_PRINCIPALS
+  file:    test/fixtures/bad/wildcard-principal.json
+  path:    $.Statement[0].Principal
+  message: sts:AssumeRoleWithWebIdentity is Allow alongside other principals: Federated=*.
+  fix:     Keep GitHub OIDC assume statements limited to Principal.Federated for the GitHub OIDC provider. Split unrelated trust into separate statements or roles.
+
+[HIGH] OIDC_SUB_WILDCARD_ORG
+  file:    test/fixtures/bad/wildcard-sub-org.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:acme/*" allows any repository under org "acme".
+  fix:     Pin to a single repository, e.g. repo:acme/<repo>:ref:refs/heads/main.
+
+[MEDIUM] OIDC_STRINGLIKE_UNNECESSARY
+  file:    test/fixtures/bad/stringlike-equals.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:aud"]
+  message: StringLike used for "token.actions.githubusercontent.com:aud" but value(s) contain no wildcards: "sts.amazonaws.com".
+  fix:     Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?.
+
+[MEDIUM] OIDC_STRINGLIKE_UNNECESSARY
+  file:    test/fixtures/bad/stringlike-equals.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: StringLike used for "token.actions.githubusercontent.com:sub" but value(s) contain no wildcards: "repo:acme/widgets:ref:refs/heads/main".
+  fix:     Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?.
+
+[MEDIUM] OIDC_STRINGLIKE_UNNECESSARY
+  file:    test/fixtures/bad/sub-unpinned.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:aud"]
+  message: StringLike used for "token.actions.githubusercontent.com:aud" but value(s) contain no wildcards: "sts.amazonaws.com".
+  fix:     Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?.
+
+[MEDIUM] OIDC_STRINGLIKE_UNNECESSARY
+  file:    test/fixtures/bad/wildcard-sub-any-repo.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:aud"]
+  message: StringLike used for "token.actions.githubusercontent.com:aud" but value(s) contain no wildcards: "sts.amazonaws.com".
+  fix:     Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?.
+
+[MEDIUM] OIDC_STRINGLIKE_UNNECESSARY
+  file:    test/fixtures/bad/wildcard-sub-org.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:aud"]
+  message: StringLike used for "token.actions.githubusercontent.com:aud" but value(s) contain no wildcards: "sts.amazonaws.com".
+  fix:     Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?.
+
+[MEDIUM] OIDC_STRINGLIKE_UNNECESSARY
+  file:    test/fixtures/terraform/aws_iam_role.json
+  path:    $.resource.aws_iam_role.gha[0].assume_role_policy.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:aud"]
+  message: StringLike used for "token.actions.githubusercontent.com:aud" but value(s) contain no wildcards: "sts.amazonaws.com".
+  fix:     Use StringEquals for exact matches. Reserve StringLike for patterns that include * or ?.
+
+[LOW] OIDC_SUB_UNPINNED
+  file:    test/fixtures/bad/sub-unpinned.json
+  path:    $.Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]
+  message: Subject "repo:acme/widgets:*" is not pinned to a specific branch, tag, or environment.
+  fix:     Prefer repo:<org>/<repo>:ref:refs/heads/<branch>, :environment:<name>, or :job_workflow_ref:<org>/<repo>/.github/workflows/<file>@refs/heads/<branch>.
